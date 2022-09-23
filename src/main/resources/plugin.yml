@@ -1,0 +1,16 @@
+name: Man10Agriculture
+version: '${project.version}'
+main: yusama1251718.man10agriculture.Man10Agriculture
+api-version: 1.17
+authors: [ yusama125718 ]
+
+commands:
+  magri:
+    description: Man10Agriculture
+    usage: /magri helpでコマンドを確認
+
+permissions:
+  magri.op:
+    default: op
+  magri.p:
+    default: true
