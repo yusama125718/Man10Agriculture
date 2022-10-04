@@ -1,6 +1,9 @@
 package yusama1251718.man10agriculture;
 
 import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,14 +18,17 @@ public final class Man10Agriculture extends JavaPlugin {
     public static List<Data.Recipe> recipes = new ArrayList<>();
     public static Boolean system = false;
     public static File configfile;
-    public static Boolean system;
     public static List<Player> lockuser = new ArrayList<>();
     public static List<Player> unlockuser = new ArrayList<>();
     public static Component itemname;
     public static List<Component> itemlore = new ArrayList<>();
-    public static int itemcmd;
+    public static Material itemmate;
+    public static Integer itemcmd;
     public static List<String> allowworld = new ArrayList<>();
-    public static HashMap<Player, Data.easyrecipe> easylist = new ArrayList<>();
+    public static HashMap<Player, Data.easyrecipe> easylist = new HashMap<>();
+    public static Material fertilizermate;
+    public static Integer fertilizercmd;
+    public static HashMap<Player, ItemFrame> activeitem = new HashMap<>();
 
     @Override
     public void onEnable() {

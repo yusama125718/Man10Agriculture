@@ -38,6 +38,7 @@ public class Command implements CommandExecutor, TabCompleter {
                         if (sender.hasPermission("magri.op")){
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri on/off §rシステムをon/offします");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri item §r栽培キットを自分に付与します");
+                            sender.sendMessage("§a§l[Man10Agriculture] §7/magri fertilizer §r肥料を自分に付与します");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri setitem §r今持っているアイテムの名前とLoreを栽培キットの名前とLoreにします");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri addeasy [名前] [時間(分)] §rレシピを追加します(簡易版)");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri delete [名前] §rレシピを削除します");
@@ -104,21 +105,22 @@ public class Command implements CommandExecutor, TabCompleter {
                             sender.sendMessage("§a§l[Man10Agriculture] §r/magri help でhelpを表示");
                             return true;
                         }
-                        if (!system){
-                            sender.sendMessage("§a§l[Man10Agriculture] §rシステムは現在OFFです");
+                        ((Player) sender).getInventory().addItem(Function.CreateItem());
+                        sender.sendMessage("§a§l[Man10Agriculture] §r付与しました");
+                        return true;
+
+                    case "fertilizer":
+                        if (!sender.hasPermission("magri.op")){
+                            sender.sendMessage("§a§l[Man10Agriculture] §r/magri help でhelpを表示");
                             return true;
                         }
-                        ((Player) sender).getInventory().addItem(Function.CreateItem());
+                        ((Player) sender).getInventory().addItem(Function.CreateFrtilizer());
                         sender.sendMessage("§a§l[Man10Agriculture] §r付与しました");
                         return true;
 
                     case "setitem":
                         if (!sender.hasPermission("magri.op")){
                             sender.sendMessage("§a§l[Man10Agriculture] §r/magri help でhelpを表示");
-                            return true;
-                        }
-                        if (!system){
-                            sender.sendMessage("§a§l[Man10Agriculture] §rシステムは現在OFFです");
                             return true;
                         }
                         itemlore.clear();

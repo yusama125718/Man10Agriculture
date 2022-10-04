@@ -2,6 +2,9 @@ system: false
 itemname: "農業キット"
 itemlore:
 - "農業ができる水耕栽培キット"
+itemmate:"STONE_HOE"
 itemcmd: 314
 worlds:
 - world
+fertilizermate: "BONE_MEAL"
+fertilizercmd: 1
