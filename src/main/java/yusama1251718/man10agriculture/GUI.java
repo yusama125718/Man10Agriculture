@@ -91,7 +91,7 @@ public class GUI {
         p.closeInventory();
         boolean isrecipe = false;
         Data.Recipe recipe = null;
-        PersistentDataContainer data = item.getItem().getItemMeta().getPersistentDataContainer()
+        PersistentDataContainer data = item.getItem().getItemMeta().getPersistentDataContainer();
         if (data.has(new NamespacedKey(magri , "MAgriRecipe"), PersistentDataType.STRING)){
             for (Data.Recipe r : recipes){
                 if (r.name.equals(data.get(new NamespacedKey(magri , "MAgriRecipe"), PersistentDataType.STRING))){
@@ -115,7 +115,24 @@ public class GUI {
                     inv.setItem(i + 2, getItem(Material.WHITE_STAINED_GLASS_PANE, 1, "", 1));
                     inv.setItem(i + 6, getItem(Material.WHITE_STAINED_GLASS_PANE, 1, "", 1));
                     if (finish){
-
+                        if (data.has(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER)){
+                            int r = data.get(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER);
+                            inv.setItem(i + 3, recipe.result.get(r).item);
+                            inv.setItem(i + 4, recipe.result.get(r).item);
+                            inv.setItem(i + 5, recipe.result.get(r).item);
+                        } else {
+                            float n = 0;
+                            float number = (float) Math.random();
+                            for (int j = 0; j < recipe.result.size(); j++){
+                                if (number > n + recipe.result.get(j).chance){
+                                    inv.setItem(i + 3, recipe.result.get(i).item);
+                                    inv.setItem(i + 4, recipe.result.get(i).item);
+                                    inv.setItem(i + 5, recipe.result.get(i).item);
+                                    data.set(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER, i);
+                                    break;
+                                }else n += recipe.result.get(j).chance;
+                            }
+                        }
                     }
                     else if (recipe.dochange){
                         int section = (int) Math.floor(between) / (recipe.time / recipe.change.size());

@@ -10,12 +10,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import static java.lang.Integer.parseInt;
@@ -31,7 +34,7 @@ public class Event implements Listener {
     }
 
     @EventHandler
-    public void EASYGUIClick(InventoryClickEvent e){
+    public void EASYGUIClick(InventoryClickEvent e){        //簡易追加画面click処理
         if (!e.getView().title().equals(Component.text("[MAgri]Easy Recipe")) || easylist == null || easylist.containsKey(e.getWhoClicked())) return;
         if (!e.getWhoClicked().hasPermission("magri.op")) {
             e.setCancelled(true);
@@ -170,6 +173,136 @@ public class Event implements Listener {
             }
             activeitem.put(e.getPlayer(), item);
             OpenMenu(e.getPlayer(), item);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //キットメニュー破壊処理
+    public void ItemBreak(HangingBreakByEntityEvent e){
+        if (!e.getRemover().getType().equals(EntityType.PLAYER) || lockuser.contains((Player) e.getRemover()) || unlockuser.contains((Player) e.getRemover())) return;
+        if (e.getEntity() instanceof ItemFrame item){
+            if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING)) return;
+            if (!system) {
+                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r現在システムがoffのため設置できません");
+                e.setCancelled(true);
+                return;
+            }
+            if (!e.getRemover().hasPermission("magri.p")){
+                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
+                e.setCancelled(true);
+                return;
+            }
+            if (item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING).equals(e.getRemover().getUniqueId().toString())){
+                if (item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) && item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) == 1 && e.getRemover().hasPermission("magri.op")){
+                    e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックされています");
+                    e.setCancelled(true);
+                }
+            }
+            PersistentDataContainer data = item.getItem().getItemMeta().getPersistentDataContainer();
+            if (data.has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING)) data.set(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING, "kit");
+            if (data.has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE)) data.set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 0);
+            if (data.has(new NamespacedKey(magri , "MAgriDate"), PersistentDataType.STRING)) data.remove(new NamespacedKey(magri , "MAgriDate"));
+            if (data.has(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER)) data.remove(new NamespacedKey(magri , "MAgriRes"));
+            if (data.has(new NamespacedKey(magri , "MAgriRecipe"), PersistentDataType.STRING)) data.remove(new NamespacedKey(magri , "MAgriRecipe"));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //ロック処理
+    public void ItemLock(HangingBreakByEntityEvent e) {
+        if (!e.getRemover().getType().equals(EntityType.PLAYER) || !lockuser.contains((Player) e.getRemover())) return;
+        lockuser.remove((Player) e.getRemover());
+        if (e.getEntity() instanceof ItemFrame item) {
+            if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING)) return;
+            e.setCancelled(true);
+            if (!system) {
+                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r現在システムがoffのためロックできません");
+                return;
+            }
+            if (!e.getRemover().hasPermission("magri.p")) {
+                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
+                return;
+            }
+            if (item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING).equals(e.getRemover().getUniqueId().toString())) {
+                e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックできません");
+                return;
+            }
+            item.getItem().getItemMeta().getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 1);
+            e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックしました");
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //アンロック処理
+    public void ItemUnLock(HangingBreakByEntityEvent e) {
+        if (!e.getRemover().getType().equals(EntityType.PLAYER) || !unlockuser.contains((Player) e.getRemover())) return;
+        unlockuser.remove((Player) e.getRemover());
+        if (e.getEntity() instanceof ItemFrame item) {
+            if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING)) return;
+            e.setCancelled(true);
+            if (!system) {
+                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r現在システムがoffのため解除できません");
+                return;
+            }
+            if (!e.getRemover().hasPermission("magri.p")) {
+                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
+                return;
+            }
+            if (item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING).equals(e.getRemover().getUniqueId().toString())) {
+                e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロック解除できません");
+                return;
+            }
+            item.getItem().getItemMeta().getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 0);
+            e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックしました");
+        }
+    }
+
+    @EventHandler
+    public void KitGUIClick(InventoryClickEvent e) {     //キットメニュークリック用
+        if (e.getInventory().getSize() != 45) return;
+        if (!e.getView().title().equals(Component.text("[Man10Agriculture]"))) return;
+        if (!e.getWhoClicked().hasPermission("magri.op")) {
+            e.setCancelled(true);
+            return;
+        }
+        if (e.getCurrentItem() == null) return;
+        switch (e.getRawSlot()){
+            case 0, 1, 9, 10, 18, 19, 27, 28, 36, 37:
+                e.setCancelled(true);
+                if (e.getCurrentItem().getType().equals(Material.BROWN_STAINED_GLASS_PANE)) {
+                    if (!e.getCursor().getType().equals(fertilizermate) || !e.getCursor().hasItemMeta() || e.getCursor().getItemMeta().getCustomModelData() != fertilizercmd || e.getCursor().getItemMeta().getPersistentDataContainer().isEmpty() || e.getCursor().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING)) return;
+                    e.getInventory().setItem(e.getRawSlot(), Function.CreateFrtilizer());
+                    ItemStack cursor = e.getCursor();
+                    cursor.setAmount(e.getCursor().getAmount() - 1);
+                    e.setCursor(cursor);
+                }
+                return;
+
+            case 7, 8, 16, 17, 25, 26, 34, 35, 43, 44:
+                e.setCancelled(true);
+                if (e.getCurrentItem().getType().equals(Material.LIGHT_BLUE_STAINED_GLASS_PANE)){
+                    if (!e.getCursor().getType().equals(Material.WATER_BUCKET)) return;
+                    e.getInventory().setItem(e.getRawSlot(), new ItemStack(Material.WATER_BUCKET));
+                    ItemStack cursor = e.getCursor();
+                    cursor.setAmount(e.getCursor().getAmount() - 1);
+                    e.setCursor(cursor);
+                }
+                return;
+
+            case 40:
+                e.setCancelled(true);
+                if (e.getCurrentItem().getItemMeta().displayName().equals("開始")){
+                    if (e.getInventory().getItem(22) == null) return;
+                    Data.Recipe target = null;
+                    for (Data.Recipe r : recipes){
+                        if (!e.getInventory().getItem(22).equals(r.material)) continue;
+                        target = r;
+                        break;
+                    }
+                    if (target == null) return;
+
+                }
+
+            default:
+                if (!e.getCurrentItem().getType().equals(Material.WHITE_STAINED_GLASS_PANE) || !e.getCurrentItem().hasItemMeta() || e.getCurrentItem().getItemMeta().getCustomModelData() != 1) return;
+                e.setCancelled(true);
         }
     }
 }

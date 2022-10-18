@@ -2,7 +2,6 @@ package yusama1251718.man10agriculture;
 
 import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
 import java.util.List;
 
 public class Data {
