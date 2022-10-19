@@ -13,6 +13,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 import static yusama1251718.man10agriculture.Function.ChangeTime;
@@ -106,11 +107,20 @@ public class GUI {
             LocalDateTime start = LocalDateTime.parse(data.get(new NamespacedKey(magri , "MAgriDate"), PersistentDataType.STRING));
             float between = ChronoUnit.MINUTES.between(start,LocalDateTime.now());
             boolean finish = between > (float) recipe.time;
+            byte water = 0, fertilizer = 0, c = 0;
+            if (data.has(new NamespacedKey(magri,"MAgriWater"), PersistentDataType.BYTE)) water = data.get(new NamespacedKey(magri,"MAgriWater"), PersistentDataType.BYTE);
+            if (data.has(new NamespacedKey(magri,"MAgriFertilizer"), PersistentDataType.BYTE)) fertilizer = data.get(new NamespacedKey(magri,"MAgriFertilizer"), PersistentDataType.BYTE);
             for (int i = 0; i <= 36; i = i + 9) {
-                inv.setItem(i + 7, getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE, 1, "水", 1));
-                inv.setItem(i + 8, getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE, 1, "水", 1));
-                inv.setItem(i + 1, getItem(Material.BROWN_STAINED_GLASS_PANE, 1, "肥料", 1));
-                inv.setItem(i, getItem(Material.BROWN_STAINED_GLASS_PANE, 1, "肥料", 1));
+                if (c < water) inv.setItem(i + 7, new ItemStack(Material.WATER_BUCKET));
+                else inv.setItem(i + 7, getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE, 1, "水", 1));
+                if (c < fertilizer) inv.setItem(i, Function.CreateFrtilizer());
+                else inv.setItem(i, getItem(Material.BROWN_STAINED_GLASS_PANE, 1, "肥料", 1));
+                c++;
+                if (c < water) inv.setItem(i + 8, new ItemStack(Material.WATER_BUCKET));
+                else inv.setItem(i + 8, getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE, 1, "水", 1));
+                if (c < fertilizer)inv.setItem(i + 1, Function.CreateFrtilizer());
+                else inv.setItem(i + 1, getItem(Material.BROWN_STAINED_GLASS_PANE, 1, "肥料", 1));
+                c++;
                 if (i == 9 || i == 18 || i == 27) {
                     inv.setItem(i + 2, getItem(Material.WHITE_STAINED_GLASS_PANE, 1, "", 1));
                     inv.setItem(i + 6, getItem(Material.WHITE_STAINED_GLASS_PANE, 1, "", 1));
@@ -140,9 +150,13 @@ public class GUI {
                         inv.setItem(i + 4, recipe.change.get(section));
                         inv.setItem(i + 5, recipe.change.get(section));
                     } else {
-                        inv.setItem(i + 3, recipe.material);
-                        inv.setItem(i + 4, recipe.material);
-                        inv.setItem(i + 5, recipe.material);
+                        ItemStack setitem = recipe.material;
+                        LocalDateTime finishtime = start.plusMinutes(recipe.time);
+                        DateTimeFormatter f = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+                        setitem.getItemMeta().displayName(Component.text("完成予定時刻：" + finishtime.format(f)));
+                        inv.setItem(i + 3, setitem);
+                        inv.setItem(i + 4, setitem);
+                        inv.setItem(i + 5, setitem);
                     }
                 } else for (int j = 1; j < 6; j++) inv.setItem(i + j, getItem(Material.WHITE_STAINED_GLASS_PANE, 1, "", 1));
             }

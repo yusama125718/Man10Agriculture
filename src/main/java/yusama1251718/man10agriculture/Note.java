@@ -14,3 +14,9 @@
 //
 // MAgriRecipe(String)
 // 実行中のレシピ保管
+//
+// MAgriWater(Byte)
+// 水の残量保管
+//
+// MAgriFertilizer(Byte)
+// 肥料の残量保管

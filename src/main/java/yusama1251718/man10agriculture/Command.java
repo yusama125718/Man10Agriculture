@@ -30,12 +30,12 @@ public class Command implements CommandExecutor, TabCompleter {
                 return true;
 
             case 1:
-                switch (args[0]){
-                    case "help":
+                switch (args[0]) {
+                    case "help" -> {
                         sender.sendMessage("§a§l[Man10Agriculture] §7/magri §rレシピを表示します");
                         sender.sendMessage("§a§l[Man10Agriculture] §7/magri lock §r栽培キットをロックします");
                         sender.sendMessage("§a§l[Man10Agriculture] §7/magri unlock §r栽培キットのロックを解除します");
-                        if (sender.hasPermission("magri.op")){
+                        if (sender.hasPermission("magri.op")) {
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri on/off §rシステムをon/offします");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri item §r栽培キットを自分に付与します");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri fertilizer §r肥料を自分に付与します");
@@ -45,13 +45,13 @@ public class Command implements CommandExecutor, TabCompleter {
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri addworld [ワールド名] §r設置できるワールドを追加します");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri deleteworld [ワールド名] §r設置できるワールドを削除します");
                         }
-                        if (!system){
+                        if (!system) {
                             sender.sendMessage("§a§l[Man10Agriculture] §rシステムは現在OFFです");
                         }
                         return true;
-
-                    case "lock":
-                        if (!system){
+                    }
+                    case "lock" -> {
+                        if (!system) {
                             sender.sendMessage("§a§l[Man10Agriculture] §rシステムは現在OFFです");
                             return true;
                         }
@@ -59,9 +59,9 @@ public class Command implements CommandExecutor, TabCompleter {
                         if (!lockuser.contains((Player) sender)) lockuser.add((Player) sender);
                         sender.sendMessage("§a§l[Man10Agriculture] §rロックしたい栽培キットを壊してください");
                         return true;
-
-                    case "unlock":
-                        if (!system){
+                    }
+                    case "unlock" -> {
+                        if (!system) {
                             sender.sendMessage("§a§l[Man10Agriculture] §rシステムは現在OFFです");
                             return true;
                         }
@@ -69,63 +69,63 @@ public class Command implements CommandExecutor, TabCompleter {
                         if (!unlockuser.contains((Player) sender)) unlockuser.add((Player) sender);
                         sender.sendMessage("§a§l[Man10Agriculture] §r解除したい栽培キットを壊してください");
                         return true;
-
-                    case "on":
-                        if (!sender.hasPermission("magri.op")){
+                    }
+                    case "on" -> {
+                        if (!sender.hasPermission("magri.op")) {
                             sender.sendMessage("§a§l[Man10Agriculture] §r/magri help でhelpを表示");
                             return true;
                         }
-                        if (system){
+                        if (system) {
                             sender.sendMessage("§a§l[Man10Agriculture] §rすでにONです");
                             return true;
                         }
                         system = true;
-                        magri.getConfig().set("system",system);
+                        magri.getConfig().set("system", system);
                         magri.saveConfig();
                         sender.sendMessage("§a§l[Man10Agriculture] §rONにしました");
                         return true;
-
-                    case "off":
-                        if (!sender.hasPermission("magri.op")){
+                    }
+                    case "off" -> {
+                        if (!sender.hasPermission("magri.op")) {
                             sender.sendMessage("§a§l[Man10Agriculture] §r/magri help でhelpを表示");
                             return true;
                         }
-                        if (!system){
+                        if (!system) {
                             sender.sendMessage("§a§l[Man10Agriculture] §rすでにONです");
                             return true;
                         }
                         system = false;
-                        magri.getConfig().set("system",system);
+                        magri.getConfig().set("system", system);
                         magri.saveConfig();
                         sender.sendMessage("§a§l[Man10Agriculture] §rOFFにしました");
                         return true;
-
-                    case "item":
-                        if (!sender.hasPermission("magri.op")){
+                    }
+                    case "item" -> {
+                        if (!sender.hasPermission("magri.op")) {
                             sender.sendMessage("§a§l[Man10Agriculture] §r/magri help でhelpを表示");
                             return true;
                         }
                         ((Player) sender).getInventory().addItem(Function.CreateItem());
                         sender.sendMessage("§a§l[Man10Agriculture] §r付与しました");
                         return true;
-
-                    case "fertilizer":
-                        if (!sender.hasPermission("magri.op")){
+                    }
+                    case "fertilizer" -> {
+                        if (!sender.hasPermission("magri.op")) {
                             sender.sendMessage("§a§l[Man10Agriculture] §r/magri help でhelpを表示");
                             return true;
                         }
                         ((Player) sender).getInventory().addItem(Function.CreateFrtilizer());
                         sender.sendMessage("§a§l[Man10Agriculture] §r付与しました");
                         return true;
-
-                    case "setitem":
-                        if (!sender.hasPermission("magri.op")){
+                    }
+                    case "setitem" -> {
+                        if (!sender.hasPermission("magri.op")) {
                             sender.sendMessage("§a§l[Man10Agriculture] §r/magri help でhelpを表示");
                             return true;
                         }
                         itemlore.clear();
                         ItemStack item = ((Player) sender).getInventory().getItemInMainHand();
-                        if (!item.hasItemMeta()){
+                        if (!item.hasItemMeta()) {
                             itemlore.add(Component.text("農業ができる水耕栽培キット"));
                             itemname = Component.text("農業キット");
                             sender.sendMessage("§a§l[Man10Agriculture] §rItemMetaが存在しないので初期値を設定しました。");
@@ -135,15 +135,16 @@ public class Command implements CommandExecutor, TabCompleter {
                         else itemname = Component.text("農業キット");
                         if (item.getItemMeta().hasLore()) itemlore = item.getItemMeta().lore();
                         else itemlore.add(Component.text("農業ができる水耕栽培キット"));
-                        magri.getConfig().set("itemname",itemname.toString());
-                        magri.getConfig().set("itemlore",itemlore.toString());
+                        magri.getConfig().set("itemname", itemname.toString());
+                        magri.getConfig().set("itemlore", itemlore.toString());
                         magri.saveConfig();
                         sender.sendMessage("§a§l[Man10Agriculture] §r設定しました。");
                         return true;
-
-                    default:
+                    }
+                    default -> {
                         sender.sendMessage("§a§l[Man10Agriculture] §r/magri help でhelpを表示");
                         return true;
+                    }
                 }
 
             case 2:
@@ -152,7 +153,7 @@ public class Command implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 switch (args[0]) {
-                    case "delete":
+                    case "delete" -> {
                         Data.Recipe target = null;
                         for (Data.Recipe data : recipes) {
                             if (Objects.equals(data.name, args[1])) {
@@ -160,68 +161,69 @@ public class Command implements CommandExecutor, TabCompleter {
                                 break;
                             }
                         }
-                        if (target == null){
+                        if (target == null) {
                             sender.sendMessage("§a§l[Man10Agriculture] §rその名前のレシピは存在しません");
                             return true;
                         }
-                        for (File file : configfile.listFiles()){
+                        for (File file : configfile.listFiles()) {
                             if (!file.getName().equals(args[2] + ".yml")) continue;
                             if (file.delete()) {
                                 recipes.remove(target);
                                 sender.sendMessage("§a§l[Man10Agriculture] §r削除しました");
-                            }else{
+                            } else {
                                 sender.sendMessage("§a§l[Man10Agriculture] §rファイルの削除に失敗しました");
                             }
                             return true;
                         }
                         sender.sendMessage("§a§l[Man10Agriculture] §rファイルが見つかりませんでした");
                         return true;
-
-                    case "addworld":
+                    }
+                    case "addworld" -> {
                         List<String> worlds = new ArrayList<>();
                         for (World w : Bukkit.getWorlds()) worlds.add(w.getName());
-                        if (!worlds.contains(args[1])){
+                        if (!worlds.contains(args[1])) {
                             sender.sendMessage("§a§l[Man10Agriculture] §r指定されたワールドが見つかりませんでした");
                             return true;
                         }
-                        if (allowworld.contains(args[1])){
+                        if (allowworld.contains(args[1])) {
                             sender.sendMessage("§a§l[Man10Agriculture] §r指定されたワールドは既に追加されています");
                             return true;
                         }
                         allowworld.add(args[1]);
-                        magri.getConfig().set("worlds",allowworld);
+                        magri.getConfig().set("worlds", allowworld);
                         magri.saveConfig();
                         sender.sendMessage("§a§l[Man10Agriculture] §r追加しました");
                         return true;
-
-                    case "deleteworld":
+                    }
+                    case "deleteworld" -> {
                         List<String> worlds1 = new ArrayList<>();
                         for (World w : Bukkit.getWorlds()) worlds1.add(w.getName());
-                        if (!worlds1.contains(args[1])){
+                        if (!worlds1.contains(args[1])) {
                             sender.sendMessage("§a§l[Man10Agriculture] §r指定されたワールドが見つかりませんでした");
                             return true;
                         }
-                        if (!allowworld.contains(args[1])){
+                        if (!allowworld.contains(args[1])) {
                             sender.sendMessage("§a§l[Man10Agriculture] §r指定されたワールドはリストに存在しません");
                             return true;
                         }
                         allowworld.remove(args[1]);
-                        magri.getConfig().set("worlds",allowworld);
+                        magri.getConfig().set("worlds", allowworld);
                         magri.saveConfig();
                         sender.sendMessage("§a§l[Man10Agriculture] §r削除しました");
                         return true;
-
-                    case "itemcmd":
+                    }
+                    case "itemcmd" -> {
                         boolean isNumeric = args[1].matches("-?\\d+");
-                        if (!isNumeric){
+                        if (!isNumeric) {
                             sender.sendMessage("§a§l[Man10Agriculture] §r数字が無効です");
                             return true;
                         }
                         itemcmd = parseInt(args[1]);
-                        magri.getConfig().set("itemcmd",itemcmd);
+                        magri.getConfig().set("itemcmd", itemcmd);
                         magri.saveConfig();
                         sender.sendMessage("§a§l[Man10Agriculture] §r設定しました。");
                         return true;
+                    }
                 }
 
             case 3:

@@ -21,10 +21,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.time.LocalDateTime;
+
 import static java.lang.Integer.parseInt;
 import static yusama1251718.man10agriculture.Config.CreateRecipe;
-import static yusama1251718.man10agriculture.Function.CountFertilizer;
-import static yusama1251718.man10agriculture.Function.CountWater;
+import static yusama1251718.man10agriculture.Function.*;
 import static yusama1251718.man10agriculture.GUI.*;
 import static yusama1251718.man10agriculture.Man10Agriculture.*;
 
@@ -256,9 +257,9 @@ public class Event implements Listener {
 
     @EventHandler
     public void KitGUIClick(InventoryClickEvent e) {     //キットメニュークリック用
-        if (e.getInventory().getSize() != 45) return;
+        if (e.getInventory().getSize() != 45 || activeitem == null || !activeitem.containsKey(e.getWhoClicked())) return;
         if (!e.getView().title().equals(Component.text("[Man10Agriculture]"))) return;
-        if (!e.getWhoClicked().hasPermission("magri.op")) {
+        if (!e.getWhoClicked().hasPermission("magri.p")) {
             e.setCancelled(true);
             return;
         }
@@ -271,7 +272,7 @@ public class Event implements Listener {
                     e.getInventory().setItem(e.getRawSlot(), Function.CreateFrtilizer());
                     ItemStack cursor = e.getCursor();
                     cursor.setAmount(e.getCursor().getAmount() - 1);
-                    e.setCursor(cursor);
+                    e.getWhoClicked().setItemOnCursor(cursor);
                 }
                 return;
 
@@ -282,22 +283,97 @@ public class Event implements Listener {
                     e.getInventory().setItem(e.getRawSlot(), new ItemStack(Material.WATER_BUCKET));
                     ItemStack cursor = e.getCursor();
                     cursor.setAmount(e.getCursor().getAmount() - 1);
-                    e.setCursor(cursor);
+                    e.getWhoClicked().setItemOnCursor(cursor);
                 }
                 return;
 
             case 40:
                 e.setCancelled(true);
+                if (!e.getCurrentItem().getType().equals(Material.RED_STAINED_GLASS_PANE) || !e.getCurrentItem().hasItemMeta() || e.getCurrentItem().getItemMeta().getCustomModelData() != 1) return;
                 if (e.getCurrentItem().getItemMeta().displayName().equals("開始")){
-                    if (e.getInventory().getItem(22) == null) return;
+                    if (e.getInventory().getItem(22) == null) {
+                        e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rアイテムをセットしてください");
+                        return;
+                    }
                     Data.Recipe target = null;
                     for (Data.Recipe r : recipes){
                         if (!e.getInventory().getItem(22).equals(r.material)) continue;
                         target = r;
                         break;
                     }
+                    if (target == null) {
+                        e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rアイテムが違います");
+                        return;
+                    }
+                    if (CountWater(e.getInventory()) < target.water){
+                        e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §r水をセットしてください");
+                        return;
+                    }
+                    if (CountFertilizer(e.getInventory()) < target.fertilizer){
+                        e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §r肥料をセットしてください");
+                        return;
+                    }
+                    byte water = target.water, fertilizer = target.fertilizer;
+                    for (int i = 0; i <= 36; i = i + 9){
+                        if (water == 0) break;
+                        if (e.getInventory().getItem(i + 7).equals(new ItemStack(Material.WATER_BUCKET))) {
+                            e.getInventory().setItem(i + 7, getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE, 1, "水", 1));
+                            water--;
+                        }
+                        if (water == 0) break;
+                        if (e.getInventory().getItem(i + 8).equals(new ItemStack(Material.WATER_BUCKET))) {
+                            e.getInventory().setItem(i + 8, getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE, 1, "水", 1));
+                            water--;
+                        }
+                    }
+                    for (int i = 0; i <= 36; i = i + 9) {
+                        if (fertilizer == 0) break;
+                        if (e.getInventory().getItem(i).equals(Function.CreateFrtilizer())) {
+                            e.getInventory().setItem(i, getItem(Material.BROWN_STAINED_GLASS_PANE, 1, "肥料", 1));
+                            fertilizer--;
+                        }
+                        if (fertilizer == 0) break;
+                        if (e.getInventory().getItem(i + 1).equals(Function.CreateFrtilizer())) {
+                            e.getInventory().setItem(i + 1, getItem(Material.BROWN_STAINED_GLASS_PANE, 1, "肥料", 1));
+                            fertilizer--;
+                        }
+                    }
+                    PersistentDataContainer data = activeitem.get(e.getWhoClicked()).getItem().getItemMeta().getPersistentDataContainer();
+                    data.set(new NamespacedKey(magri, "MAgriRecipe"), PersistentDataType.STRING, target.name);
+                    data.set(new NamespacedKey(magri, "MAgriDate"), PersistentDataType.STRING, LocalDateTime.now().toString());
+                    e.getInventory().close();
+                    e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §r栽培を開始します");
+                    return;
+                }
+                else if (e.getCurrentItem().getItemMeta().displayName().equals("キャンセル")){
+                    if (e.getWhoClicked().getInventory().firstEmpty() == -1){
+                        e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rインベントリが満杯のためキャンセルできません");
+                        return;
+                    }
+                    PersistentDataContainer data = activeitem.get(e.getWhoClicked()).getItem().getItemMeta().getPersistentDataContainer();
+                    Data.Recipe target = null;
+                    for (Data.Recipe r : recipes) if (r.name.equals(data.get(new NamespacedKey(magri , "MAgriRecipe"), PersistentDataType.STRING))) target = r;
                     if (target == null) return;
-
+                    e.getWhoClicked().getInventory().addItem(target.material);
+                    data.remove(new NamespacedKey(magri , "MAgriDate"));
+                    data.remove(new NamespacedKey(magri , "MAgriRecipe"));
+                    e.getInventory().close();
+                    e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rキャンセルしました");
+                    return;
+                }
+                else if (e.getCurrentItem().getItemMeta().displayName().equals("受け取り")){
+                    if (e.getWhoClicked().getInventory().firstEmpty() == -1){
+                        e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rインベントリが満杯のためキャンセルできません");
+                        return;
+                    }
+                    e.getWhoClicked().getInventory().addItem(e.getInventory().getItem(22));
+                    PersistentDataContainer data = activeitem.get(e.getWhoClicked()).getItem().getItemMeta().getPersistentDataContainer();
+                    data.remove(new NamespacedKey(magri , "MAgriDate"));
+                    data.remove(new NamespacedKey(magri , "MAgriRecipe"));
+                    data.remove(new NamespacedKey(magri , "MAgriRes"));
+                    e.getInventory().close();
+                    e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rキャンセルしました");
+                    return;
                 }
 
             default:
