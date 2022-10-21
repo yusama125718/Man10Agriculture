@@ -26,7 +26,7 @@ public class Function {
         magri.saveDefaultConfig();
         system = magri.getConfig().getBoolean("system");
         allowworld.addAll(magri.getConfig().getStringList("worlds"));
-        itemname = Component.text(magri.getConfig().getString("name"));
+        itemname = Component.text(magri.getConfig().getString("itemname"));
         List<String> addlist = new ArrayList<>();
         addlist.addAll(magri.getConfig().getStringList("itemlore"));
         for (int i = 0; i < addlist.size(); i++) itemlore.add(Component.text(addlist.get(i)));
@@ -45,7 +45,7 @@ public class Function {
     public static ItemStack CreateFrtilizer(){
         ItemStack item = new ItemStack(fertilizermate);
         ItemMeta meta = item.getItemMeta();
-        meta.getPersistentDataContainer().set(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING,"kit");
+        meta.getPersistentDataContainer().set(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING,"fertilizer");
         meta.displayName(Component.text("§4肥料"));
         List<Component> lore = new ArrayList<>();
         lore.add(Component.text("§7水耕栽培で使える肥料。作物の成長を促進させる。"));

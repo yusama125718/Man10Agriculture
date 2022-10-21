@@ -158,7 +158,7 @@ public class GUI {
                         inv.setItem(i + 4, setitem);
                         inv.setItem(i + 5, setitem);
                     }
-                } else for (int j = 1; j < 6; j++) inv.setItem(i + j, getItem(Material.WHITE_STAINED_GLASS_PANE, 1, "", 1));
+                } else for (int j = 2; j < 7; j++) inv.setItem(i + j, getItem(Material.WHITE_STAINED_GLASS_PANE, 1, "", 1));
             }
             if (finish) inv.setItem(40,getItem(Material.RED_STAINED_GLASS_PANE,1,"受け取り",1));
             else inv.setItem(40,getItem(Material.RED_STAINED_GLASS_PANE,1,"キャンセル",1));
@@ -173,7 +173,7 @@ public class GUI {
                     inv.setItem(i + 3,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
                     inv.setItem(i + 5,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
                     inv.setItem(i + 6,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
-                }else for (int j = 1;j < 6;j++) inv.setItem(i + j,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
+                }else for (int j = 2;j < 7;j++) inv.setItem(i + j,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
             }
             inv.setItem(40,getItem(Material.RED_STAINED_GLASS_PANE,1,"開始",1));
         }

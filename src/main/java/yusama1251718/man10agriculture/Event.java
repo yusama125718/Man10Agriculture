@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
@@ -12,12 +13,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -120,9 +121,10 @@ public class Event implements Listener {
 //    }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //設置処理
-    public void ItemPlace(HangingPlaceEvent e){
-        if (e.getEntity() instanceof ItemFrame item){
-            if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING)) return;
+    public void ItemPlace(PlayerInteractEntityEvent e){
+        if (e.getRightClicked() instanceof ItemFrame i){
+            ItemStack item = e.getPlayer().getInventory().getItemInMainHand();
+            if (!item.hasItemMeta() || item.getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING)) return;
             if (!system) {
                 e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r現在システムがoffのため設置できません");
                 e.setCancelled(true);
@@ -133,13 +135,15 @@ public class Event implements Listener {
                 e.setCancelled(true);
                 return;
             }
-            if (!allowworld.contains(e.getPlayer().getWorld().toString())){
+            if (!allowworld.contains(e.getPlayer().getWorld().getName())){
                 e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rこのワールドでは設置できません");
                 e.setCancelled(true);
                 return;
             }
-            item.getItem().getItemMeta().getPersistentDataContainer().set(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING, e.getPlayer().getUniqueId().toString());
-            item.getItem().getItemMeta().getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 0);
+            ItemMeta meta = e.getPlayer().getInventory().getItemInMainHand().getItemMeta();
+            meta.getPersistentDataContainer().set(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING, e.getPlayer().getUniqueId().toString());
+            meta.getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 0);
+            e.getPlayer().getInventory().getItemInMainHand().setItemMeta(meta);
             e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r設置しました");
         }
     }
@@ -147,7 +151,7 @@ public class Event implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //キットメニューOpen処理
     public void ItemClick(PlayerInteractEntityEvent e){
         if (e.getRightClicked() instanceof ItemFrame item){
-            if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING) || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) || e.getHand().equals(EquipmentSlot.OFF_HAND)) return;
+            if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING) || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) || !e.getHand().equals(EquipmentSlot.HAND)) return;
             e.setCancelled(true);
             if (!system) {
                 e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r現在システムはoffです");
@@ -157,7 +161,7 @@ public class Event implements Listener {
                 e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
                 return;
             }
-            if (!allowworld.contains(e.getPlayer().getWorld().toString())){
+            if (!allowworld.contains(e.getPlayer().getWorld().getName())){
                 e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rこのワールドでは使えません");
                 return;
             }
@@ -177,7 +181,7 @@ public class Event implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //キットメニュー破壊処理
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //キット破壊処理
     public void ItemBreak(HangingBreakByEntityEvent e){
         if (!e.getRemover().getType().equals(EntityType.PLAYER) || lockuser.contains((Player) e.getRemover()) || unlockuser.contains((Player) e.getRemover())) return;
         if (e.getEntity() instanceof ItemFrame item){
@@ -198,12 +202,13 @@ public class Event implements Listener {
                     e.setCancelled(true);
                 }
             }
-            PersistentDataContainer data = item.getItem().getItemMeta().getPersistentDataContainer();
-            if (data.has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING)) data.set(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING, "kit");
-            if (data.has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE)) data.set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 0);
-            if (data.has(new NamespacedKey(magri , "MAgriDate"), PersistentDataType.STRING)) data.remove(new NamespacedKey(magri , "MAgriDate"));
-            if (data.has(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER)) data.remove(new NamespacedKey(magri , "MAgriRes"));
-            if (data.has(new NamespacedKey(magri , "MAgriRecipe"), PersistentDataType.STRING)) data.remove(new NamespacedKey(magri , "MAgriRecipe"));
+            ItemMeta meta = item.getItem().getItemMeta();
+            if (meta.getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING)) meta.getPersistentDataContainer().set(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING, "kit");
+            if (meta.getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE)) meta.getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 0);
+            if (meta.getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriDate"), PersistentDataType.STRING)) meta.getPersistentDataContainer().remove(new NamespacedKey(magri , "MAgriDate"));
+            if (meta.getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER)) meta.getPersistentDataContainer().remove(new NamespacedKey(magri , "MAgriRes"));
+            if (meta.getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriRecipe"), PersistentDataType.STRING)) meta.getPersistentDataContainer().remove(new NamespacedKey(magri , "MAgriRecipe"));
+            item.getItem().setItemMeta(meta);
         }
     }
 
@@ -226,7 +231,9 @@ public class Event implements Listener {
                 e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックできません");
                 return;
             }
-            item.getItem().getItemMeta().getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 1);
+            ItemMeta meta = item.getItem().getItemMeta();
+            meta.getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 1);
+            item.getItem().setItemMeta(meta);
             e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックしました");
         }
     }
@@ -250,7 +257,9 @@ public class Event implements Listener {
                 e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロック解除できません");
                 return;
             }
-            item.getItem().getItemMeta().getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 0);
+            ItemMeta meta = item.getItem().getItemMeta();
+            meta.getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 0);
+            item.getItem().setItemMeta(meta);
             e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックしました");
         }
     }
@@ -264,27 +273,24 @@ public class Event implements Listener {
             return;
         }
         if (e.getCurrentItem() == null) return;
+        ItemStack cursor = e.getCursor();
         switch (e.getRawSlot()){
             case 0, 1, 9, 10, 18, 19, 27, 28, 36, 37:
                 e.setCancelled(true);
-                if (e.getCurrentItem().getType().equals(Material.BROWN_STAINED_GLASS_PANE)) {
-                    if (!e.getCursor().getType().equals(fertilizermate) || !e.getCursor().hasItemMeta() || e.getCursor().getItemMeta().getCustomModelData() != fertilizercmd || e.getCursor().getItemMeta().getPersistentDataContainer().isEmpty() || e.getCursor().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING)) return;
-                    e.getInventory().setItem(e.getRawSlot(), Function.CreateFrtilizer());
-                    ItemStack cursor = e.getCursor();
-                    cursor.setAmount(e.getCursor().getAmount() - 1);
-                    e.getWhoClicked().setItemOnCursor(cursor);
-                }
+                if (!e.getCurrentItem().getType().equals(Material.BROWN_STAINED_GLASS_PANE)) return;
+                System.out.println(e.getCursor());
+                if (!e.getCursor().hasItemMeta() || e.getCursor().getItemMeta().getPersistentDataContainer().isEmpty() || e.getCursor().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING) || e.getCursor().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING).equals("fertilizer")) return;
+                e.getInventory().setItem(e.getRawSlot(), Function.CreateFrtilizer());
+                cursor.setAmount(e.getCursor().getAmount() - 1);
+                e.getWhoClicked().setItemOnCursor(cursor);
                 return;
 
             case 7, 8, 16, 17, 25, 26, 34, 35, 43, 44:
                 e.setCancelled(true);
-                if (e.getCurrentItem().getType().equals(Material.LIGHT_BLUE_STAINED_GLASS_PANE)){
-                    if (!e.getCursor().getType().equals(Material.WATER_BUCKET)) return;
-                    e.getInventory().setItem(e.getRawSlot(), new ItemStack(Material.WATER_BUCKET));
-                    ItemStack cursor = e.getCursor();
-                    cursor.setAmount(e.getCursor().getAmount() - 1);
-                    e.getWhoClicked().setItemOnCursor(cursor);
-                }
+                if (!e.getCurrentItem().getType().equals(Material.LIGHT_BLUE_STAINED_GLASS_PANE)) return;
+                if (!e.getCursor().getType().equals(Material.WATER_BUCKET)) return;
+                e.getInventory().setItem(e.getRawSlot(), new ItemStack(Material.WATER_BUCKET));
+                e.getWhoClicked().setItemOnCursor(new ItemStack(Material.BUCKET));
                 return;
 
             case 40:
@@ -380,5 +386,16 @@ public class Event implements Listener {
                 if (!e.getCurrentItem().getType().equals(Material.WHITE_STAINED_GLASS_PANE) || !e.getCurrentItem().hasItemMeta() || e.getCurrentItem().getItemMeta().getCustomModelData() != 1) return;
                 e.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void Closekit(InventoryCloseEvent e){        //kitClose処理
+        if (e.getInventory().getSize() != 45 || activeitem == null || !activeitem.containsKey(e.getPlayer())) return;
+        if (!e.getView().title().equals(Component.text("[Man10Agriculture]"))) return;
+        ItemMeta meta = activeitem.get(e.getPlayer()).getItem().getItemMeta();
+        meta.getPersistentDataContainer().set(new NamespacedKey(magri,"MAgriWater"), PersistentDataType.BYTE, CountWater(e.getInventory()));
+        meta.getPersistentDataContainer().set(new NamespacedKey(magri,"MAgriFertilizer"), PersistentDataType.BYTE, CountFertilizer(e.getInventory()));
+        activeitem.get(e.getPlayer()).getItem().setItemMeta(meta);
+        activeitem.remove(e.getPlayer());
     }
 }
