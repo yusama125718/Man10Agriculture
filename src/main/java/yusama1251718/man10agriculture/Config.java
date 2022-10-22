@@ -3,10 +3,12 @@ package yusama1251718.man10agriculture;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -41,12 +43,16 @@ public class Config {
         }
         ItemStack material = config.getItemStack("material");
         ItemStack icon = config.getItemStack("icon");
+        List<Data.Result> result = new ArrayList<>();
+        List<ItemStack> item = (List<ItemStack>) config.getList("result.item");
+        List<Float> chance = config.getFloatList("result.chance");
+        for (int i = 0; i < item.size(); i++){
+            result.add(new Data.Result(item.get(i),chance.get(i)));
+        }
         if (config.getBoolean("dochange")){
-            List<Data.Result> result = (List<Data.Result>) config.getList("result");
             List<ItemStack> change = (List<ItemStack>) config.getList("change");
             return new Data.Recipe(config.getString("name"), icon, config.getInt("time"), (byte) config.getInt("water"), (byte) config.getInt("fertilizer"), material, result, change);
         } else {
-            ItemStack result = config.getItemStack("result");
             return new Data.Recipe(config.getString("name"), icon, config.getInt("time"), (byte) config.getInt("water"), (byte) config.getInt("fertilizer"), material, result);
         }
     }
@@ -60,7 +66,14 @@ public class Config {
         yml.set("water", r.water);
         yml.set("fertilizer", r.fertilizer);
         yml.set("material", r.material);
-        yml.set("result", r.result);
+        List<ItemStack> resitem = new ArrayList<>();
+        List<Float> reschance = new ArrayList<>();
+        for (Data.Result res : r.result){
+            resitem.add(res.item);
+            reschance.add(res.chance);
+        }
+        yml.set("result.item", resitem);
+        yml.set("result.chance", reschance);
         yml.set("dochange", r.dochange);
         yml.set("change", r.change);
         try {

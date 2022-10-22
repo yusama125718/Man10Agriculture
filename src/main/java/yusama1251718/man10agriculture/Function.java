@@ -90,7 +90,7 @@ public class Function {
     }
 
     public static Boolean checknull(YamlConfiguration config){              //ロード用
-        return (config.getString("name") != null && config.getString("time") != null && config.getItemStack("material") != null && config.getItemStack("result") != null && config.getItemStack("icon") != null && config.getString("water") != null && config.getString("fertilizer") != null && config.getString("dochange") != null);
+        return (config.getString("name") != null && config.getString("time") != null && config.getItemStack("material") != null && config.getList("result.item") != null && config.getList("result.chance") != null && config.getItemStack("icon") != null && config.getString("water") != null && config.getString("fertilizer") != null && config.getString("dochange") != null);
     }
 
     public static Byte CountWater(Inventory inv){

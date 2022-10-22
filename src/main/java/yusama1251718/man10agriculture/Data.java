@@ -2,6 +2,7 @@ package yusama1251718.man10agriculture;
 
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Data {
@@ -16,14 +17,14 @@ public class Data {
         public Boolean dochange;
         public List<ItemStack> change;
 
-        public Recipe(String NAME, ItemStack ICON, Integer TIME, Byte WATER,Byte FERTILIZER, ItemStack MATERIAL, ItemStack RESULT){
+        public Recipe(String NAME, ItemStack ICON, Integer TIME, Byte WATER,Byte FERTILIZER, ItemStack MATERIAL, List<Result> RESULT){
             name = NAME;
             icon = ICON;
             time = TIME;
             water = WATER;
             fertilizer = FERTILIZER;
             material = MATERIAL;
-            result.add(new Result(RESULT, 1f));
+            result = (RESULT);
             dochange = false;
         }
         public Recipe(String NAME, ItemStack ICON, Integer TIME, Byte WATER,Byte FERTILIZER, ItemStack MATERIAL, List<Result> RESULT, List<ItemStack> CHANGE){

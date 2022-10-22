@@ -23,6 +23,8 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.Integer.parseInt;
 import static yusama1251718.man10agriculture.Config.CreateRecipe;
@@ -37,32 +39,47 @@ public class Event implements Listener {
 
     @EventHandler
     public void EASYGUIClick(InventoryClickEvent e){        //簡易追加画面click処理
-        if (!e.getView().title().equals(Component.text("[MAgri]Easy Recipe")) || easylist == null || easylist.containsKey(e.getWhoClicked())) return;
+        if (!e.getView().title().equals(Component.text("[MAgri]Easy Recipe")) || easylist == null || !easylist.containsKey(e.getWhoClicked())) return;
         if (!e.getWhoClicked().hasPermission("magri.op")) {
             e.setCancelled(true);
             return;
         }
-        if (e.getCurrentItem() == null) return;
-        e.setCancelled(true);
-        if (e.getRawSlot() == 40){      //done
-            if (!e.getCurrentItem().getType().equals(Material.RED_STAINED_GLASS_PANE)) return;
-            if (e.getInventory().getItem(21) == null || e.getInventory().getItem(23) == null){
-                e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rアイテムが不足しています！");
-                return;
+        ItemStack cursor = e.getCursor();
+        switch (e.getRawSlot()) {
+            case 0, 1, 9, 10, 18, 19, 27, 28, 36, 37 -> {
+                e.setCancelled(true);
+                if (e.getCurrentItem().getType().equals(Material.BROWN_STAINED_GLASS_PANE)) e.getInventory().setItem(e.getRawSlot(), Function.CreateFrtilizer());
+                else if (e.getCurrentItem().getType().equals(fertilizermate)) e.getInventory().setItem(e.getRawSlot(), Function.getItem(Material.BROWN_STAINED_GLASS_PANE,1,"肥料",1));
             }
-            byte water = CountWater(e.getInventory()), fertilizer = CountFertilizer(e.getInventory());
-            Data.easyrecipe addrecipe = easylist.get(e.getWhoClicked());
-            Data.Recipe r = new Data.Recipe(addrecipe.name, e.getInventory().getItem(23), addrecipe.time, water, fertilizer, e.getInventory().getItem(21), e.getInventory().getItem(23));
-            CreateRecipe(r);
-            recipes.add(r);
-        }
-        else if (e.getRawSlot() == 0 || e.getRawSlot() == 1 || e.getRawSlot() == 9 || e.getRawSlot() == 10 || e.getRawSlot() == 18 || e.getRawSlot() == 19 || e.getRawSlot() == 27 || e.getRawSlot() == 28 || e.getRawSlot() == 36 || e.getRawSlot() == 37){         //fertilizer
-            if (e.getCurrentItem().getType().equals(Material.BROWN_STAINED_GLASS_PANE)) e.getInventory().setItem(e.getRawSlot(), Function.CreateFrtilizer());
-            else if (e.getCurrentItem().getType().equals(fertilizermate)) e.getInventory().setItem(e.getRawSlot(), Function.getItem(Material.BROWN_STAINED_GLASS_PANE,1,"肥料",1));
-        }
-        else if (e.getRawSlot() == 7 || e.getRawSlot() == 8 || e.getRawSlot() == 16 || e.getRawSlot() == 17 || e.getRawSlot() == 25 || e.getRawSlot() == 26 || e.getRawSlot() == 34 || e.getRawSlot() == 35 || e.getRawSlot() == 43 || e.getRawSlot() == 44){         //water
-            if (e.getCurrentItem().getType().equals(Material.LIGHT_BLUE_STAINED_GLASS_PANE)) e.getInventory().setItem(e.getRawSlot(), new ItemStack(Material.WATER_BUCKET));
-            else if (e.getCurrentItem().getType().equals(Material.WATER_BUCKET)) e.getInventory().setItem(e.getRawSlot(), Function.getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE,1,"水",1));
+
+            case 7, 8, 16, 17, 25, 26, 34, 35, 43, 44 -> {
+                e.setCancelled(true);
+                if (e.getCurrentItem().getType().equals(Material.LIGHT_BLUE_STAINED_GLASS_PANE)) e.getInventory().setItem(e.getRawSlot(), new ItemStack(Material.WATER_BUCKET));
+                else if (e.getCurrentItem().getType().equals(Material.WATER_BUCKET)) e.getInventory().setItem(e.getRawSlot(), Function.getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE,1,"水",1));
+            }
+
+            case 40 -> {
+                e.setCancelled(true);
+                if (!e.getCurrentItem().getType().equals(Material.RED_STAINED_GLASS_PANE)) return;
+                if (e.getInventory().getItem(21) == null || e.getInventory().getItem(23) == null) {
+                    e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rアイテムが不足しています！");
+                    return;
+                }
+                byte water = CountWater(e.getInventory()), fertilizer = CountFertilizer(e.getInventory());
+                Data.easyrecipe addrecipe = easylist.get(e.getWhoClicked());
+                List<Data.Result> result = new ArrayList<>();
+                result.add(new Data.Result(e.getInventory().getItem(23), 1f));
+                Data.Recipe r = new Data.Recipe(addrecipe.name, e.getInventory().getItem(23), addrecipe.time, water, fertilizer, e.getInventory().getItem(21), result);
+                CreateRecipe(r);
+                recipes.add(r);
+                e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §r追加しました");
+                e.getWhoClicked().closeInventory();
+            }
+
+            default -> {
+                if (e.getCurrentItem() == null || !e.getCurrentItem().getType().equals(Material.WHITE_STAINED_GLASS_PANE) || !e.getCurrentItem().hasItemMeta() || e.getCurrentItem().getItemMeta().getCustomModelData() != 1) return;
+                e.setCancelled(true);
+            }
         }
     }
 
@@ -278,8 +295,7 @@ public class Event implements Listener {
             case 0, 1, 9, 10, 18, 19, 27, 28, 36, 37:
                 e.setCancelled(true);
                 if (!e.getCurrentItem().getType().equals(Material.BROWN_STAINED_GLASS_PANE)) return;
-                System.out.println(e.getCursor());
-                if (!e.getCursor().hasItemMeta() || e.getCursor().getItemMeta().getPersistentDataContainer().isEmpty() || e.getCursor().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING) || e.getCursor().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING).equals("fertilizer")) return;
+                if (!e.getCursor().hasItemMeta() || e.getCursor().getItemMeta().getPersistentDataContainer().isEmpty() || !e.getCursor().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING) || !e.getCursor().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING).equals("fertilizer")) return;
                 e.getInventory().setItem(e.getRawSlot(), Function.CreateFrtilizer());
                 cursor.setAmount(e.getCursor().getAmount() - 1);
                 e.getWhoClicked().setItemOnCursor(cursor);
@@ -296,7 +312,7 @@ public class Event implements Listener {
             case 40:
                 e.setCancelled(true);
                 if (!e.getCurrentItem().getType().equals(Material.RED_STAINED_GLASS_PANE) || !e.getCurrentItem().hasItemMeta() || e.getCurrentItem().getItemMeta().getCustomModelData() != 1) return;
-                if (e.getCurrentItem().getItemMeta().displayName().equals("開始")){
+                if (e.getCurrentItem().getItemMeta().displayName().equals(Component.text("開始"))){
                     if (e.getInventory().getItem(22) == null) {
                         e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rアイテムをセットしてください");
                         return;
@@ -344,39 +360,48 @@ public class Event implements Listener {
                             fertilizer--;
                         }
                     }
-                    PersistentDataContainer data = activeitem.get(e.getWhoClicked()).getItem().getItemMeta().getPersistentDataContainer();
-                    data.set(new NamespacedKey(magri, "MAgriRecipe"), PersistentDataType.STRING, target.name);
-                    data.set(new NamespacedKey(magri, "MAgriDate"), PersistentDataType.STRING, LocalDateTime.now().toString());
+                    ItemStack item = activeitem.get(e.getWhoClicked()).getItem();
+                    ItemMeta data = item.getItemMeta();
+                    data.getPersistentDataContainer().set(new NamespacedKey(magri, "MAgriRecipe"), PersistentDataType.STRING, target.name);
+                    data.getPersistentDataContainer().set(new NamespacedKey(magri, "MAgriDate"), PersistentDataType.STRING, LocalDateTime.now().toString());
+                    item.setItemMeta(data);
+                    activeitem.get(e.getWhoClicked()).setItem(item);
                     e.getInventory().close();
                     e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §r栽培を開始します");
                     return;
                 }
-                else if (e.getCurrentItem().getItemMeta().displayName().equals("キャンセル")){
+                else if (e.getCurrentItem().getItemMeta().displayName().equals(Component.text("キャンセル"))){
                     if (e.getWhoClicked().getInventory().firstEmpty() == -1){
                         e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rインベントリが満杯のためキャンセルできません");
                         return;
                     }
-                    PersistentDataContainer data = activeitem.get(e.getWhoClicked()).getItem().getItemMeta().getPersistentDataContainer();
+                    ItemStack item = activeitem.get(e.getWhoClicked()).getItem();
+                    ItemMeta data = item.getItemMeta();
                     Data.Recipe target = null;
-                    for (Data.Recipe r : recipes) if (r.name.equals(data.get(new NamespacedKey(magri , "MAgriRecipe"), PersistentDataType.STRING))) target = r;
+                    for (Data.Recipe r : recipes) if (r.name.equals(data.getPersistentDataContainer().get(new NamespacedKey(magri , "MAgriRecipe"), PersistentDataType.STRING))) target = r;
                     if (target == null) return;
                     e.getWhoClicked().getInventory().addItem(target.material);
-                    data.remove(new NamespacedKey(magri , "MAgriDate"));
-                    data.remove(new NamespacedKey(magri , "MAgriRecipe"));
+                    data.getPersistentDataContainer().remove(new NamespacedKey(magri , "MAgriDate"));
+                    data.getPersistentDataContainer().remove(new NamespacedKey(magri , "MAgriRecipe"));
+                    item.setItemMeta(data);
+                    activeitem.get(e.getWhoClicked()).setItem(item);
                     e.getInventory().close();
                     e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rキャンセルしました");
                     return;
                 }
-                else if (e.getCurrentItem().getItemMeta().displayName().equals("受け取り")){
+                else if (e.getCurrentItem().getItemMeta().displayName().equals(Component.text("受け取り"))){
                     if (e.getWhoClicked().getInventory().firstEmpty() == -1){
                         e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rインベントリが満杯のためキャンセルできません");
                         return;
                     }
                     e.getWhoClicked().getInventory().addItem(e.getInventory().getItem(22));
-                    PersistentDataContainer data = activeitem.get(e.getWhoClicked()).getItem().getItemMeta().getPersistentDataContainer();
-                    data.remove(new NamespacedKey(magri , "MAgriDate"));
-                    data.remove(new NamespacedKey(magri , "MAgriRecipe"));
-                    data.remove(new NamespacedKey(magri , "MAgriRes"));
+                    ItemStack item = activeitem.get(e.getWhoClicked()).getItem();
+                    ItemMeta data = item.getItemMeta();
+                    data.getPersistentDataContainer().remove(new NamespacedKey(magri , "MAgriDate"));
+                    data.getPersistentDataContainer().remove(new NamespacedKey(magri , "MAgriRecipe"));
+                    data.getPersistentDataContainer().remove(new NamespacedKey(magri , "MAgriRes"));
+                    item.setItemMeta(data);
+                    activeitem.get(e.getWhoClicked()).setItem(item);
                     e.getInventory().close();
                     e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rキャンセルしました");
                     return;
@@ -395,7 +420,9 @@ public class Event implements Listener {
         ItemMeta meta = activeitem.get(e.getPlayer()).getItem().getItemMeta();
         meta.getPersistentDataContainer().set(new NamespacedKey(magri,"MAgriWater"), PersistentDataType.BYTE, CountWater(e.getInventory()));
         meta.getPersistentDataContainer().set(new NamespacedKey(magri,"MAgriFertilizer"), PersistentDataType.BYTE, CountFertilizer(e.getInventory()));
-        activeitem.get(e.getPlayer()).getItem().setItemMeta(meta);
+        ItemStack item = activeitem.get(e.getPlayer()).getItem();
+        item.setItemMeta(meta);
+        activeitem.get(e.getPlayer()).setItem(item);
         activeitem.remove(e.getPlayer());
     }
 }

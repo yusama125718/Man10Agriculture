@@ -28,11 +28,11 @@ public class GUI {
             inv.setItem(i + 8,getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE,1,"水",1));
             inv.setItem(i + 1,getItem(Material.BROWN_STAINED_GLASS_PANE,1,"肥料",1));
             inv.setItem(i,getItem(Material.BROWN_STAINED_GLASS_PANE,1,"肥料",1));
-            if (i == 2){
+            if (i == 18){
                 inv.setItem(i + 2,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
                 inv.setItem(i + 4,getItem(Material.QUARTZ,1,"",62));
                 inv.setItem(i + 6,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
-            }else for (int j = 1;j < 6;j++) inv.setItem(i + j,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
+            }else for (int j = 2;j < 7;j++) inv.setItem(i + j,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
         }
         inv.setItem(40,getItem(Material.RED_STAINED_GLASS_PANE,1,"追加",1));
         p.openInventory(inv);
@@ -57,10 +57,7 @@ public class GUI {
                 list = recipes.get(i + 45 * (page - 1));
             }
             ItemStack item = new ItemStack(list.icon);
-            ItemMeta meta = item.getItemMeta();
-            if (meta.hasLore()) meta.lore().clear();
-            item.setItemMeta(meta);
-            inv.setItem(i,item);
+            inv.setItem(i, item);
         }
         p.openInventory(inv);
     }
@@ -127,6 +124,7 @@ public class GUI {
                     if (finish){
                         if (data.has(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER)){
                             int r = data.get(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER);
+                            System.out.println(recipe.result.get(r).item);
                             inv.setItem(i + 3, recipe.result.get(r).item);
                             inv.setItem(i + 4, recipe.result.get(r).item);
                             inv.setItem(i + 5, recipe.result.get(r).item);
@@ -135,10 +133,14 @@ public class GUI {
                             float number = (float) Math.random();
                             for (int j = 0; j < recipe.result.size(); j++){
                                 if (number > n + recipe.result.get(j).chance){
-                                    inv.setItem(i + 3, recipe.result.get(i).item);
-                                    inv.setItem(i + 4, recipe.result.get(i).item);
-                                    inv.setItem(i + 5, recipe.result.get(i).item);
-                                    data.set(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER, i);
+                                    System.out.println(recipe.result.get(j).item);
+                                    inv.setItem(i + 3, recipe.result.get(j).item);
+                                    inv.setItem(i + 4, recipe.result.get(j).item);
+                                    inv.setItem(i + 5, recipe.result.get(j).item);
+                                    ItemMeta meta = item.getItem().getItemMeta();
+                                    meta.getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER, j);
+                                    ItemStack setitem = item.getItem();
+                                    item.setItem(setitem);
                                     break;
                                 }else n += recipe.result.get(j).chance;
                             }
@@ -146,14 +148,22 @@ public class GUI {
                     }
                     else if (recipe.dochange){
                         int section = (int) Math.floor(between) / (recipe.time / recipe.change.size());
+                        ItemStack setitem = recipe.change.get(section);
+                        ItemMeta setmeta = setitem.getItemMeta();
+                        LocalDateTime finishtime = start.plusMinutes(recipe.time);
+                        DateTimeFormatter f = DateTimeFormatter.ofPattern("MM/dd HH:mm");
+                        setmeta.displayName(Component.text("完成予定時刻：" + finishtime.format(f)));
+                        setitem.setItemMeta(setmeta);
                         inv.setItem(i + 3, recipe.change.get(section));
                         inv.setItem(i + 4, recipe.change.get(section));
                         inv.setItem(i + 5, recipe.change.get(section));
                     } else {
                         ItemStack setitem = recipe.material;
+                        ItemMeta setmeta = setitem.getItemMeta();
                         LocalDateTime finishtime = start.plusMinutes(recipe.time);
                         DateTimeFormatter f = DateTimeFormatter.ofPattern("MM/dd HH:mm");
-                        setitem.getItemMeta().displayName(Component.text("完成予定時刻：" + finishtime.format(f)));
+                        setmeta.displayName(Component.text("完成予定時刻：" + finishtime.format(f)));
+                        setitem.setItemMeta(setmeta);
                         inv.setItem(i + 3, setitem);
                         inv.setItem(i + 4, setitem);
                         inv.setItem(i + 5, setitem);
@@ -163,11 +173,20 @@ public class GUI {
             if (finish) inv.setItem(40,getItem(Material.RED_STAINED_GLASS_PANE,1,"受け取り",1));
             else inv.setItem(40,getItem(Material.RED_STAINED_GLASS_PANE,1,"キャンセル",1));
         } else {
+            byte water = 0, fertilizer = 0, c = 0;
+            if (data.has(new NamespacedKey(magri,"MAgriWater"), PersistentDataType.BYTE)) water = data.get(new NamespacedKey(magri,"MAgriWater"), PersistentDataType.BYTE);
+            if (data.has(new NamespacedKey(magri,"MAgriFertilizer"), PersistentDataType.BYTE)) fertilizer = data.get(new NamespacedKey(magri,"MAgriFertilizer"), PersistentDataType.BYTE);
             for (int i = 0; i <= 36; i = i + 9){
-                inv.setItem(i + 7,getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE,1,"水",1));
-                inv.setItem(i + 8,getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE,1,"水",1));
-                inv.setItem(i + 1,getItem(Material.BROWN_STAINED_GLASS_PANE,1,"肥料",1));
-                inv.setItem(i,getItem(Material.BROWN_STAINED_GLASS_PANE,1,"肥料",1));
+                if (c < water) inv.setItem(i + 7, new ItemStack(Material.WATER_BUCKET));
+                else inv.setItem(i + 7, getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE, 1, "水", 1));
+                if (c < fertilizer) inv.setItem(i, Function.CreateFrtilizer());
+                else inv.setItem(i, getItem(Material.BROWN_STAINED_GLASS_PANE, 1, "肥料", 1));
+                c++;
+                if (c < water) inv.setItem(i + 8, new ItemStack(Material.WATER_BUCKET));
+                else inv.setItem(i + 8, getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE, 1, "水", 1));
+                if (c < fertilizer)inv.setItem(i + 1, Function.CreateFrtilizer());
+                else inv.setItem(i + 1, getItem(Material.BROWN_STAINED_GLASS_PANE, 1, "肥料", 1));
+                c++;
                 if (i == 18){
                     inv.setItem(i + 2,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
                     inv.setItem(i + 3,getItem(Material.WHITE_STAINED_GLASS_PANE,1,"",1));
