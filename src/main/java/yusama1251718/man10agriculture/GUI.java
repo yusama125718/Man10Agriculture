@@ -103,7 +103,7 @@ public class GUI {
         if (isrecipe){
             LocalDateTime start = LocalDateTime.parse(data.get(new NamespacedKey(magri , "MAgriDate"), PersistentDataType.STRING));
             float between = ChronoUnit.MINUTES.between(start,LocalDateTime.now());
-            boolean finish = between > (float) recipe.time;
+            boolean finish = between >= (float) recipe.time;
             byte water = 0, fertilizer = 0, c = 0;
             if (data.has(new NamespacedKey(magri,"MAgriWater"), PersistentDataType.BYTE)) water = data.get(new NamespacedKey(magri,"MAgriWater"), PersistentDataType.BYTE);
             if (data.has(new NamespacedKey(magri,"MAgriFertilizer"), PersistentDataType.BYTE)) fertilizer = data.get(new NamespacedKey(magri,"MAgriFertilizer"), PersistentDataType.BYTE);
@@ -124,16 +124,14 @@ public class GUI {
                     if (finish){
                         if (data.has(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER)){
                             int r = data.get(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER);
-                            System.out.println(recipe.result.get(r).item);
                             inv.setItem(i + 3, recipe.result.get(r).item);
                             inv.setItem(i + 4, recipe.result.get(r).item);
                             inv.setItem(i + 5, recipe.result.get(r).item);
                         } else {
-                            float n = 0;
-                            float number = (float) Math.random();
+                            double n = 0;
+                            double number = Math.random();
                             for (int j = 0; j < recipe.result.size(); j++){
-                                if (number > n + recipe.result.get(j).chance){
-                                    System.out.println(recipe.result.get(j).item);
+                                if (number <= n + recipe.result.get(j).chance){
                                     inv.setItem(i + 3, recipe.result.get(j).item);
                                     inv.setItem(i + 4, recipe.result.get(j).item);
                                     inv.setItem(i + 5, recipe.result.get(j).item);
@@ -148,7 +146,7 @@ public class GUI {
                     }
                     else if (recipe.dochange){
                         int section = (int) Math.floor(between) / (recipe.time / recipe.change.size());
-                        ItemStack setitem = recipe.change.get(section);
+                        ItemStack setitem = new ItemStack(recipe.change.get(section));
                         ItemMeta setmeta = setitem.getItemMeta();
                         LocalDateTime finishtime = start.plusMinutes(recipe.time);
                         DateTimeFormatter f = DateTimeFormatter.ofPattern("MM/dd HH:mm");
@@ -158,7 +156,7 @@ public class GUI {
                         inv.setItem(i + 4, recipe.change.get(section));
                         inv.setItem(i + 5, recipe.change.get(section));
                     } else {
-                        ItemStack setitem = recipe.material;
+                        ItemStack setitem = new ItemStack(recipe.material);
                         ItemMeta setmeta = setitem.getItemMeta();
                         LocalDateTime finishtime = start.plusMinutes(recipe.time);
                         DateTimeFormatter f = DateTimeFormatter.ofPattern("MM/dd HH:mm");

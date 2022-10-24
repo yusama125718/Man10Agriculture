@@ -26,6 +26,7 @@ public final class Man10Agriculture extends JavaPlugin {
     public static Integer itemcmd;
     public static List<String> allowworld = new ArrayList<>();
     public static HashMap<Player, Data.easyrecipe> easylist = new HashMap<>();
+    public static HashMap<Player, Data.advrecipe> advlist = new HashMap<>();
     public static Material fertilizermate;
     public static Integer fertilizercmd;
     public static HashMap<Player, ItemFrame> activeitem = new HashMap<>();

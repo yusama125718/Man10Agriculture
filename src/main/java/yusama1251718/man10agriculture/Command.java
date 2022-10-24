@@ -41,6 +41,7 @@ public class Command implements CommandExecutor, TabCompleter {
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri fertilizer §r肥料を自分に付与します");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri setitem §r今持っているアイテムの名前とLoreを栽培キットの名前とLoreにします");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri addeasy [名前] [時間(分)] §rレシピを追加します(簡易版)");
+                            sender.sendMessage("§a§l[Man10Agriculture] §7/magri addadv [名前] [時間(分)] §rレシピを追加します(Advance版)");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri delete [名前] §rレシピを削除します");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri addworld [ワールド名] §r設置できるワールドを追加します");
                             sender.sendMessage("§a§l[Man10Agriculture] §7/magri deleteworld [ワールド名] §r設置できるワールドを削除します");
@@ -227,25 +228,42 @@ public class Command implements CommandExecutor, TabCompleter {
                 }
 
             case 3:
-                if (!args[0].equals("addeasy") || !sender.hasPermission("magri.op")){
+                if (args[0].equals("addeasy") || sender.hasPermission("magri.op")){
+                    List<String> returnlist = new ArrayList<>();
+                    for (Data.Recipe p : recipes) returnlist.add(p.name);
+                    if (returnlist.contains(args[1])){
+                        sender.sendMessage("§a§l[Man10Agriculture] §rその名前は既に使われています");
+                        return true;
+                    }
+                    boolean isNumeric = args[2].matches("-?\\d+");
+                    if (!isNumeric){
+                        sender.sendMessage("§a§l[Man10Agriculture] §r時間が無効です");
+                        return true;
+                    }
+                    easylist.put((Player) sender, new Data.easyrecipe(args[1],parseInt(args[2])));
+                    easyrecipeGUI((Player) sender);
+                    return true;
+                } else if (args[0].equals("addadv") || sender.hasPermission("magri.op")){
+                    List<String> returnlist = new ArrayList<>();
+                    for (Data.Recipe p : recipes) returnlist.add(p.name);
+                    if (returnlist.contains(args[1])){
+                        sender.sendMessage("§a§l[Man10Agriculture] §rその名前は既に使われています");
+                        return true;
+                    }
+                    boolean isNumeric = args[2].matches("-?\\d+");
+                    if (!isNumeric){
+                        sender.sendMessage("§a§l[Man10Agriculture] §r時間が無効です");
+                        return true;
+                    }
+
+                    return true;
+                } else {
                     sender.sendMessage("§a§l[Man10Agriculture] §r/magri help でhelpを表示");
                     return true;
                 }
 
-                List<String> returnlist = new ArrayList<>();
-                for (Data.Recipe p : recipes) returnlist.add(p.name);
-                if (returnlist.contains(args[1])){
-                    sender.sendMessage("§a§l[Man10Agriculture] §rその名前は既に使われています");
-                    return true;
-                }
-                boolean isNumeric = args[2].matches("-?\\d+");
-                if (!isNumeric){
-                    sender.sendMessage("§a§l[Man10Agriculture] §r時間が無効です");
-                    return true;
-                }
-                easylist.put((Player) sender, new Data.easyrecipe(args[1],parseInt(args[2])));
-                easyrecipeGUI((Player) sender);
-                return true;
+
+
         }
         return true;
     }

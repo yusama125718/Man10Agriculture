@@ -2,7 +2,6 @@ package yusama1251718.man10agriculture;
 
 import org.bukkit.inventory.ItemStack;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Data {
@@ -52,11 +51,23 @@ public class Data {
 
     public static class Result{
         public ItemStack item;
-        public Float chance;
+        public Double chance;
 
-        public Result(ItemStack ITEM, Float CHANCE){
+        public Result(ItemStack ITEM, Double CHANCE){
             item = ITEM;
             chance = CHANCE;
+        }
+    }
+
+    public static class advrecipe{
+        public String name;
+        public Integer time;
+        public List<Result> result;
+        public List<ItemStack> change;
+
+        public advrecipe(String NAME, Integer TIME){
+            name = NAME;
+            time = TIME;
         }
     }
 }

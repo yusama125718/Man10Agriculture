@@ -68,7 +68,7 @@ public class Event implements Listener {
                 byte water = CountWater(e.getInventory()), fertilizer = CountFertilizer(e.getInventory());
                 Data.easyrecipe addrecipe = easylist.get(e.getWhoClicked());
                 List<Data.Result> result = new ArrayList<>();
-                result.add(new Data.Result(e.getInventory().getItem(23), 1f));
+                result.add(new Data.Result(e.getInventory().getItem(23), 1d));
                 Data.Recipe r = new Data.Recipe(addrecipe.name, e.getInventory().getItem(23), addrecipe.time, water, fertilizer, e.getInventory().getItem(21), result);
                 CreateRecipe(r);
                 recipes.add(r);
@@ -403,7 +403,7 @@ public class Event implements Listener {
                     item.setItemMeta(data);
                     activeitem.get(e.getWhoClicked()).setItem(item);
                     e.getInventory().close();
-                    e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rキャンセルしました");
+                    e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §r受け取りました");
                     return;
                 }
 

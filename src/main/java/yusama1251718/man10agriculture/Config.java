@@ -45,7 +45,7 @@ public class Config {
         ItemStack icon = config.getItemStack("icon");
         List<Data.Result> result = new ArrayList<>();
         List<ItemStack> item = (List<ItemStack>) config.getList("result.item");
-        List<Float> chance = config.getFloatList("result.chance");
+        List<Double> chance = config.getDoubleList("result.chance");
         for (int i = 0; i < item.size(); i++){
             result.add(new Data.Result(item.get(i),chance.get(i)));
         }
@@ -67,7 +67,7 @@ public class Config {
         yml.set("fertilizer", r.fertilizer);
         yml.set("material", r.material);
         List<ItemStack> resitem = new ArrayList<>();
-        List<Float> reschance = new ArrayList<>();
+        List<Double> reschance = new ArrayList<>();
         for (Data.Result res : r.result){
             resitem.add(res.item);
             reschance.add(res.chance);
