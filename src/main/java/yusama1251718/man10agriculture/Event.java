@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Integer.parseInt;
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.event.ClickEvent.suggestCommand;
 import static yusama1251718.man10agriculture.Config.CreateRecipe;
 import static yusama1251718.man10agriculture.Function.*;
 import static yusama1251718.man10agriculture.GUI.*;
@@ -44,7 +46,6 @@ public class Event implements Listener {
             e.setCancelled(true);
             return;
         }
-        ItemStack cursor = e.getCursor();
         switch (e.getRawSlot()) {
             case 0, 1, 9, 10, 18, 19, 27, 28, 36, 37 -> {
                 e.setCancelled(true);
@@ -88,6 +89,112 @@ public class Event implements Listener {
         if (!e.getView().title().equals(Component.text("[MAgri]Easy Recipe"))) return;
         if (easylist == null || !easylist.containsKey(e.getPlayer())) return;
         easylist.remove(e.getPlayer());
+    }
+
+    @EventHandler
+    public void ADVChangeGUIClick(InventoryClickEvent e) {        //Advance追加画面click処理
+        if (!e.getView().title().equals(Component.text("[MAgri]Adv Change")) || advlist == null || !advlist.containsKey(e.getWhoClicked())) return;
+        if (advlist.get((Player) e.getWhoClicked()).progression != 0) return;
+        if (!e.getWhoClicked().hasPermission("magri.op")) {
+            e.setCancelled(true);
+            return;
+        }
+        if (e.getCurrentItem() == null) return;
+        if (e.getCurrentItem().getType().equals(Material.WHITE_STAINED_GLASS_PANE) || e.getCurrentItem().getType().equals(Material.BARRIER)){
+            if (!e.getCurrentItem().hasItemMeta() || !e.getCurrentItem().getItemMeta().displayName().equals(Component.text(""))) return;
+            e.setCancelled(true);
+        }
+        else if (e.getCurrentItem().getType().equals(Material.RED_STAINED_GLASS_PANE) && e.getRawSlot() == 40){
+            e.setCancelled(true);
+            Data.advrecipe target = advlist.get(e.getWhoClicked());
+            for (int i = 0; i < target.section; i++){
+                if (e.getInventory().getItem(i) == null){
+                    if (target.change != null) target.change.clear();
+                    e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §r空きスロットがあります");
+                    return;
+                }
+                target.change.add(e.getInventory().getItem(i));
+            }
+            target.progression = 1;
+            e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §r/magri advres に続けて結果の確率を入力してください");
+            e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §r入力例：/magri advres 0.8 0.15 0.05");
+            e.getWhoClicked().sendMessage(text("§a§l[ここをクリックで自動入力する]").clickEvent(suggestCommand("/magri advres ")));
+            e.getWhoClicked().closeInventory();
+        }
+    }
+
+    @EventHandler
+    public void ADVResultGUIClick(InventoryClickEvent e) {        //Advance追加画面click処理
+        if (e.getInventory().getSize() != 9 || e.getCurrentItem() == null || advlist == null || !advlist.containsKey(e.getWhoClicked())) return;
+        if (advlist.get((Player) e.getWhoClicked()).progression != 2) return;
+        String title = null;
+        Component component = e.getView().title();
+        if (component instanceof TextComponent text) title = text.content();
+        if (title == null || title.length() != 18 || !title.startsWith("[MAgri]Adv Result")) return;
+        if (e.getRawSlot() == 8){
+            e.setCancelled(true);
+            if (e.getInventory().getItem(4) == null){
+                e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rアイテムを入れてください");
+                return;
+            }
+            boolean isNumeric = title.substring(17).matches("-?\\d+");
+            if (!isNumeric) return;
+            int section = parseInt(title.substring(17));
+            if (section == advlist.get(e.getWhoClicked()).chance.size() - 1){
+                advlist.get(e.getWhoClicked()).result.add(new Data.Result(e.getInventory().getItem(4), advlist.get(e.getWhoClicked()).chance.get(section)));
+                e.getWhoClicked().closeInventory();
+                advlist.get(e.getWhoClicked()).progression = 3;
+                AdvIconGUI((Player) e.getWhoClicked());
+            } else {
+                advlist.get(e.getWhoClicked()).result.add(new Data.Result(e.getInventory().getItem(4), advlist.get(e.getWhoClicked()).chance.get(section)));
+                e.getWhoClicked().closeInventory();
+                AdvResultGUI((Player) e.getWhoClicked(), section + 1);
+            }
+        } else if ((e.getCurrentItem().getType().equals(Material.WHITE_STAINED_GLASS_PANE) || e.getCurrentItem().getType().equals(Material.BLACK_STAINED_GLASS_PANE)) && e.getCurrentItem().hasItemMeta() && e.getCurrentItem().getItemMeta().displayName().equals(Component.text(""))) e.setCancelled(true);
+    }
+
+    @EventHandler
+    public void ADVIconGUIClick(InventoryClickEvent e) {        //Advance追加画面click処理
+        if (e.getInventory().getSize() != 45 || e.getCurrentItem() == null || advlist == null || !advlist.containsKey(e.getWhoClicked())) return;
+        if (!e.getView().title().equals(Component.text("[MAgri]Adv Icon")) || advlist == null || !advlist.containsKey(e.getWhoClicked())) return;
+        if (advlist.get((Player) e.getWhoClicked()).progression != 3) return;
+        if (!e.getWhoClicked().hasPermission("magri.op")) {
+            e.setCancelled(true);
+            return;
+        }
+        switch (e.getRawSlot()) {
+            case 0, 1, 9, 10, 18, 19, 27, 28, 36, 37 -> {
+                e.setCancelled(true);
+                if (e.getCurrentItem().getType().equals(Material.BROWN_STAINED_GLASS_PANE)) e.getInventory().setItem(e.getRawSlot(), Function.CreateFrtilizer());
+                else if (e.getCurrentItem().getType().equals(fertilizermate)) e.getInventory().setItem(e.getRawSlot(), Function.getItem(Material.BROWN_STAINED_GLASS_PANE,1,"肥料",1));
+            }
+
+            case 7, 8, 16, 17, 25, 26, 34, 35, 43, 44 -> {
+                e.setCancelled(true);
+                if (e.getCurrentItem().getType().equals(Material.LIGHT_BLUE_STAINED_GLASS_PANE)) e.getInventory().setItem(e.getRawSlot(), new ItemStack(Material.WATER_BUCKET));
+                else if (e.getCurrentItem().getType().equals(Material.WATER_BUCKET)) e.getInventory().setItem(e.getRawSlot(), Function.getItem(Material.LIGHT_BLUE_STAINED_GLASS_PANE,1,"水",1));
+            }
+
+            case 40 -> {
+                e.setCancelled(true);
+                if (!e.getCurrentItem().getType().equals(Material.RED_STAINED_GLASS_PANE)) return;
+                if (e.getInventory().getItem(21) == null || e.getInventory().getItem(23) == null) {
+                    e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rアイテムが不足しています！");
+                    return;
+                }
+                Data.advrecipe t = advlist.get((Player) e.getWhoClicked());
+                Data.Recipe r = new Data.Recipe(t.name, e.getInventory().getItem(23),t.time ,Function.CountWater(e.getInventory()), Function.CountFertilizer(e.getInventory()), e.getInventory().getItem(21),t.result, t.change);
+                recipes.add(r);
+                CreateRecipe(r);
+                e.getWhoClicked().closeInventory();
+                e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §r追加しました");
+            }
+
+            default -> {
+                if (e.getCurrentItem() == null || (!e.getCurrentItem().getType().equals(Material.WHITE_STAINED_GLASS_PANE) && !e.getCurrentItem().getType().equals(Material.BLACK_STAINED_GLASS_PANE)) || !e.getCurrentItem().hasItemMeta() || e.getCurrentItem().getItemMeta().getCustomModelData() != 1) return;
+                e.setCancelled(true);
+            }
+        }
     }
 
     @EventHandler
@@ -168,7 +275,7 @@ public class Event implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //キットメニューOpen処理
     public void ItemClick(PlayerInteractEntityEvent e){
         if (e.getRightClicked() instanceof ItemFrame item){
-            if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING) || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) || !e.getHand().equals(EquipmentSlot.HAND)) return;
+            if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING) || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) || !e.getHand().equals(EquipmentSlot.HAND) || lockuser.contains(e.getPlayer()) || unlockuser.contains(e.getPlayer())) return;
             e.setCancelled(true);
             if (!system) {
                 e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r現在システムはoffです");
@@ -200,7 +307,7 @@ public class Event implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //キット破壊処理
     public void ItemBreak(HangingBreakByEntityEvent e){
-        if (!e.getRemover().getType().equals(EntityType.PLAYER) || lockuser.contains((Player) e.getRemover()) || unlockuser.contains((Player) e.getRemover())) return;
+        if (!e.getRemover().getType().equals(EntityType.PLAYER)) return;
         if (e.getEntity() instanceof ItemFrame item){
             if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING)) return;
             if (!system) {
@@ -230,54 +337,56 @@ public class Event implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //ロック処理
-    public void ItemLock(HangingBreakByEntityEvent e) {
-        if (!e.getRemover().getType().equals(EntityType.PLAYER) || !lockuser.contains((Player) e.getRemover())) return;
-        lockuser.remove((Player) e.getRemover());
-        if (e.getEntity() instanceof ItemFrame item) {
-            if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING)) return;
+    public void ItemLock(PlayerInteractEntityEvent e) {
+        if (e.getRightClicked() instanceof ItemFrame item){
+            if (!lockuser.contains(e.getPlayer()) || !item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING) || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) || !e.getHand().equals(EquipmentSlot.HAND)) return;
+            lockuser.remove(e.getPlayer());
             e.setCancelled(true);
             if (!system) {
-                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r現在システムがoffのためロックできません");
+                e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r現在システムがoffのためロックできません");
                 return;
             }
-            if (!e.getRemover().hasPermission("magri.p")) {
-                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
+            if (!e.getPlayer().hasPermission("magri.p")) {
+                e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
                 return;
             }
-            if (item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING).equals(e.getRemover().getUniqueId().toString())) {
-                e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックできません");
+            if (item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING).equals(e.getPlayer().getUniqueId().toString())) {
+                e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rロックできません");
                 return;
             }
-            ItemMeta meta = item.getItem().getItemMeta();
+            ItemStack setitem = item.getItem();
+            ItemMeta meta = setitem.getItemMeta();
             meta.getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 1);
-            item.getItem().setItemMeta(meta);
-            e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックしました");
+            setitem.setItemMeta(meta);
+            item.setItem(setitem);
+            e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rロックしました");
         }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //アンロック処理
-    public void ItemUnLock(HangingBreakByEntityEvent e) {
-        if (!e.getRemover().getType().equals(EntityType.PLAYER) || !unlockuser.contains((Player) e.getRemover())) return;
-        unlockuser.remove((Player) e.getRemover());
-        if (e.getEntity() instanceof ItemFrame item) {
-            if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING)) return;
+    public void ItemUnLock(PlayerInteractEntityEvent e) {
+        if (e.getRightClicked() instanceof ItemFrame item) {
+            if (!unlockuser.contains(e.getPlayer()) || !item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING) || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) || !e.getHand().equals(EquipmentSlot.HAND)) return;
+            unlockuser.remove(e.getPlayer());
             e.setCancelled(true);
             if (!system) {
-                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r現在システムがoffのため解除できません");
+                e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r現在システムがoffのため解除できません");
                 return;
             }
-            if (!e.getRemover().hasPermission("magri.p")) {
-                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
+            if (!e.getPlayer().hasPermission("magri.p")) {
+                e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
                 return;
             }
-            if (item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING).equals(e.getRemover().getUniqueId().toString())) {
-                e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロック解除できません");
+            if (item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING).equals(e.getPlayer().getUniqueId().toString())) {
+                e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rロック解除できません");
                 return;
             }
-            ItemMeta meta = item.getItem().getItemMeta();
+            ItemStack setitem = item.getItem();
+            ItemMeta meta = setitem.getItemMeta();
             meta.getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 0);
-            item.getItem().setItemMeta(meta);
-            e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックしました");
+            setitem.setItemMeta(meta);
+            item.setItem(setitem);
+            e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rロックしました");
         }
     }
 
