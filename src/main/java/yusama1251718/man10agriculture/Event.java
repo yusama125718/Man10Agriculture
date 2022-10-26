@@ -4,22 +4,20 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
-import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.time.LocalDateTime;
@@ -306,24 +304,25 @@ public class Event implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)         //キット破壊処理
-    public void ItemBreak(HangingBreakByEntityEvent e){
-        if (!e.getRemover().getType().equals(EntityType.PLAYER)) return;
+    public void EntityDamageByEntityEvent(EntityDamageByEntityEvent e){
+        if (!e.getDamager().getType().equals(EntityType.PLAYER)) return;
         if (e.getEntity() instanceof ItemFrame item){
             if (!item.getItem().hasItemMeta() || item.getItem().getItemMeta().getPersistentDataContainer().isEmpty() || !item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING)) return;
             if (!system) {
-                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r現在システムがoffのため設置できません");
+                e.getDamager().sendMessage("§a§l[Man10Agriculture] §r現在システムがoffのため破壊できません");
                 e.setCancelled(true);
                 return;
             }
-            if (!e.getRemover().hasPermission("magri.p")){
-                e.getRemover().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
+            if (!e.getDamager().hasPermission("magri.p")){
+                e.getDamager().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
                 e.setCancelled(true);
                 return;
             }
-            if (item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING).equals(e.getRemover().getUniqueId().toString())){
-                if (item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) && item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) == 1 && e.getRemover().hasPermission("magri.op")){
-                    e.getRemover().sendMessage("§a§l[Man10Agriculture] §rロックされています");
+            if (!item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri , "Man10Agriculture"), PersistentDataType.STRING).equals(e.getDamager().getUniqueId().toString())){
+                if (item.getItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) && item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE) == 1 && !e.getDamager().hasPermission("magri.op")){
+                    e.getDamager().sendMessage("§a§l[Man10Agriculture] §rロックされています");
                     e.setCancelled(true);
+                    return;
                 }
             }
             ItemMeta meta = item.getItem().getItemMeta();
@@ -333,6 +332,7 @@ public class Event implements Listener {
             if (meta.getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER)) meta.getPersistentDataContainer().remove(new NamespacedKey(magri , "MAgriRes"));
             if (meta.getPersistentDataContainer().has(new NamespacedKey(magri , "MAgriRecipe"), PersistentDataType.STRING)) meta.getPersistentDataContainer().remove(new NamespacedKey(magri , "MAgriRecipe"));
             item.getItem().setItemMeta(meta);
+            e.getDamager().sendMessage("§a§l[Man10Agriculture] §r破壊しました");
         }
     }
 
@@ -350,8 +350,8 @@ public class Event implements Listener {
                 e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
                 return;
             }
-            if (item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING).equals(e.getPlayer().getUniqueId().toString())) {
-                e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rロックできません");
+            if (!item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING).equals(e.getPlayer().getUniqueId().toString())) {
+                e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rあなたはオーナーでないのでロックできません");
                 return;
             }
             ItemStack setitem = item.getItem();
@@ -377,8 +377,8 @@ public class Event implements Listener {
                 e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r権限がありません");
                 return;
             }
-            if (item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING).equals(e.getPlayer().getUniqueId().toString())) {
-                e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rロック解除できません");
+            if (!item.getItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(magri, "Man10Agriculture"), PersistentDataType.STRING).equals(e.getPlayer().getUniqueId().toString())) {
+                e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rあなたはオーナーでないのでロック解除できません");
                 return;
             }
             ItemStack setitem = item.getItem();
@@ -386,7 +386,7 @@ public class Event implements Listener {
             meta.getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriLock"), PersistentDataType.BYTE, (byte) 0);
             setitem.setItemMeta(meta);
             item.setItem(setitem);
-            e.getPlayer().sendMessage("§a§l[Man10Agriculture] §rロックしました");
+            e.getPlayer().sendMessage("§a§l[Man10Agriculture] §r解除しました");
         }
     }
 
@@ -500,7 +500,7 @@ public class Event implements Listener {
                 }
                 else if (e.getCurrentItem().getItemMeta().displayName().equals(Component.text("受け取り"))){
                     if (e.getWhoClicked().getInventory().firstEmpty() == -1){
-                        e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rインベントリが満杯のためキャンセルできません");
+                        e.getWhoClicked().sendMessage("§a§l[Man10Agriculture] §rインベントリが満杯のため受け取りできません");
                         return;
                     }
                     e.getWhoClicked().getInventory().addItem(e.getInventory().getItem(22));

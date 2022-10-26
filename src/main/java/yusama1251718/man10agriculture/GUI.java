@@ -168,6 +168,7 @@ public class GUI {
                                         inv.setItem(i + 3, recipe.result.get(j).item);
                                         inv.setItem(i + 4, recipe.result.get(j).item);
                                         inv.setItem(i + 5, recipe.result.get(j).item);
+                                        r = j;
                                         ItemStack setitem = item.getItem();
                                         ItemMeta meta = setitem.getItemMeta();
                                         meta.getPersistentDataContainer().set(new NamespacedKey(magri , "MAgriRes"), PersistentDataType.INTEGER, j);
